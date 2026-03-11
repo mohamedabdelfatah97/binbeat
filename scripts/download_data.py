@@ -31,7 +31,7 @@ def download_all(raw_dir: str = RAW_DIR) -> None:
     for i, rec in enumerate(RECORDS, 1):
         target = os.path.join(raw_dir, rec)
         # skip if all 3 files already exist
-        if all(os.path.exists(f"{target}.{ext}") for ext in ("dat", "hea", "atr")):
+        if all(os.path.exists(f"{target}.{ext}") for ext in ("dat",)):
             print(f"[{i:02d}/{len(RECORDS)}] {rec} — already exists, skipping")
             continue
 

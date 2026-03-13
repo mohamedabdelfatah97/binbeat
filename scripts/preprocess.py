@@ -24,6 +24,7 @@ WINDOW_SIZE       = 187   # samples per heartbeat window
 BEFORE_PEAK       = 90    # samples before R-peak
 AFTER_PEAK        = 96    # samples after R-peak  (90 + 96 + 1 = 187)
 FREQ_THRESHOLD    = 300   # drop classes with fewer than this many samples
+EXCLUDE_SYMBOLS = {"+", "~", '"'} # later addition
 
 # standard inter-patient split used in ECG literature
 TRAIN_RECORDS = [
@@ -99,9 +100,14 @@ def preprocess(raw_dir: str = RAW_DIR, processed_dir: str = PROCESSED_DIR):
 
     valid_symbols = set()
     for symbol, count in sorted(symbol_counter.items(), key=lambda x: -x[1]):
-        status = "KEEP" if count >= FREQ_THRESHOLD else "DROP"
+        if symbol in EXCLUDE_SYMBOLS:
+            status = "EXCLUDE (not a heartbeat type)"
+        elif count < FREQ_THRESHOLD:
+            status = "DROP (too rare)"
+        else:
+            status = "KEEP"
         print(f"  {symbol:<10} {count:<10} {status}")
-        if count >= FREQ_THRESHOLD:
+        if count >= FREQ_THRESHOLD and symbol not in EXCLUDE_SYMBOLS:
             valid_symbols.add(symbol)
 
     print(f"\nKept {len(valid_symbols)} classes: {sorted(valid_symbols)}")

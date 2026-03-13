@@ -113,6 +113,7 @@ def get_dataloaders(
         batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
+        drop_last=True,
     )
     test_loader = DataLoader(
         test_dataset,

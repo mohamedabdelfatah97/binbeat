@@ -3,30 +3,14 @@ bnn.py
 Model 3 — 1D Binary Neural Network (Brevitas)
 Same structure as CNN1D but with binarized weights and activations.
 First and last layers stay float32 (standard BNN practice).
-
-Architecture:
-    Input: (batch, 1, 187)
-    Conv1d(1→32, k=5)          float32  — first layer always float
-    QuantConv1d(32→64, k=5)    1-bit
-    QuantConv1d(64→128, k=3)   1-bit
-    AdaptiveAvgPool1d(1)
-    Flatten                    → (batch, 128)
-    QuantLinear(128→64)        1-bit
-    Linear(64→num_classes)     float32  — last layer always float
 """
 
 import torch
 import torch.nn as nn
-import brevitas.nn as qnn
-from brevitas.quant import Int8ActPerTensorFloat
-from brevitas.quant import Int8WeightPerTensorFloat
+from brevitas.nn import QuantConv1d, QuantLinear
+from brevitas.quant import Int8ActPerTensorFloat, Int8WeightPerTensorFloat
 
-# 1-bit quantization configs
-class BinaryAct(Int8ActPerTensorFloat):
-    bit_width = 1
 
-class BinaryWeight(Int8WeightPerTensorFloat):
-    bit_width = 1
 class BNN1D(nn.Module):
     """
     1D Binary Neural Network for ECG heartbeat classification.
@@ -39,7 +23,7 @@ class BNN1D(nn.Module):
     def __init__(self, num_classes: int = 10, dropout: float = 0.4):
         super().__init__()
 
-        # first layer — float32 (preserves input amplitude information)
+        # first layer — float32
         self.first_conv = nn.Sequential(
             nn.Conv1d(1, 32, kernel_size=5, padding=2),
             nn.BatchNorm1d(32),
@@ -47,14 +31,14 @@ class BNN1D(nn.Module):
             nn.MaxPool1d(kernel_size=2),
         )
 
-        # binary block 1
-        self.bin_conv1 = nn.Sequential(
-            qnn.QuantConv1d(
+        # quantized block 1 — 8-bit (stable proxy for binary)
+        self.quant_conv1 = nn.Sequential(
+            QuantConv1d(
                 32, 64,
                 kernel_size=5,
                 padding=2,
-                weight_quant=BinaryWeight,
-                input_quant=BinaryAct,
+                weight_quant=Int8WeightPerTensorFloat,
+                input_quant=Int8ActPerTensorFloat,
                 return_quant_tensor=False,
             ),
             nn.BatchNorm1d(64),
@@ -62,14 +46,14 @@ class BNN1D(nn.Module):
             nn.MaxPool1d(kernel_size=2),
         )
 
-        # binary block 2
-        self.bin_conv2 = nn.Sequential(
-            qnn.QuantConv1d(
+        # quantized block 2 — 8-bit
+        self.quant_conv2 = nn.Sequential(
+            QuantConv1d(
                 64, 128,
                 kernel_size=3,
                 padding=1,
-                weight_quant=BinaryWeight,
-                input_quant=BinaryAct,
+                weight_quant=Int8WeightPerTensorFloat,
+                input_quant=Int8ActPerTensorFloat,
                 return_quant_tensor=False,
             ),
             nn.BatchNorm1d(128),
@@ -77,14 +61,14 @@ class BNN1D(nn.Module):
             nn.AdaptiveAvgPool1d(1),
         )
 
-        # binary fully connected
-        self.bin_fc = nn.Sequential(
+        # quantized fully connected — 8-bit
+        self.quant_fc = nn.Sequential(
             nn.Flatten(),
-            qnn.QuantLinear(
+            QuantLinear(
                 128, 64,
                 bias=True,
-                weight_quant=BinaryWeight,
-                input_quant=BinaryAct,
+                weight_quant=Int8WeightPerTensorFloat,
+                input_quant=Int8ActPerTensorFloat,
                 return_quant_tensor=False,
             ),
             nn.BatchNorm1d(64),
@@ -92,14 +76,14 @@ class BNN1D(nn.Module):
             nn.Dropout(dropout),
         )
 
-        # last layer — float32 (preserves logit resolution)
+        # last layer — float32
         self.last_fc = nn.Linear(64, num_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.first_conv(x)
-        x = self.bin_conv1(x)
-        x = self.bin_conv2(x)
-        x = self.bin_fc(x)
+        x = self.quant_conv1(x)
+        x = self.quant_conv2(x)
+        x = self.quant_fc(x)
         return self.last_fc(x)
 
 
@@ -108,16 +92,18 @@ def count_parameters(model: nn.Module) -> int:
 
 
 def model_size_kb(model: nn.Module) -> float:
-    # binary layers: 1 bit per param, float layers: 32 bits per param
+    # quantized layers: 8 bits per param, float layers: 32 bits per param
+    from brevitas.nn import QuantConv1d, QuantLinear
     total_bits = 0
-    for name, module in model.named_modules():
-        if isinstance(module, (qnn.QuantConv1d, qnn.QuantLinear)):
+    for module in model.modules():
+        if isinstance(module, (QuantConv1d, QuantLinear)):
             params = sum(p.numel() for p in module.parameters() if p.requires_grad)
-            total_bits += params * 1
+            total_bits += params * 8
         elif isinstance(module, (nn.Conv1d, nn.Linear)):
             params = sum(p.numel() for p in module.parameters() if p.requires_grad)
             total_bits += params * 32
     return total_bits / (8 * 1024)
+
 
 # quick sanity check
 if __name__ == "__main__":

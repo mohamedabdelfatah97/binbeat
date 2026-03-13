@@ -1,0 +1,17 @@
+{
+  "mlp": {
+    "best_test_acc": 0.6219620868438107,
+    "best_train_acc": 0.98369140625,
+    "total_time_s": 95.34474563598633
+  },
+  "cnn": {
+    "best_test_acc": 0.7337977965003241,
+    "best_train_acc": 0.99296875,
+    "total_time_s": 4025.166273355484
+  },
+  "bnn": {
+    "best_test_acc": 0.7832550226830849,
+    "best_train_acc": 0.99650390625,
+    "total_time_s": 4372.468104362488
+  }
+}

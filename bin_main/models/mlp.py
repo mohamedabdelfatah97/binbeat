@@ -14,8 +14,6 @@ Architecture:
 
 import torch
 import torch.nn as nn
-
-
 class MLP(nn.Module):
     """
     Fully connected baseline for ECG heartbeat classification.
@@ -57,16 +55,13 @@ class MLP(nn.Module):
         x = self.flatten(x)          # → (batch, 187)
         return self.classifier(x)    # → (batch, num_classes)
 
-
 def count_parameters(model: nn.Module) -> int:
     """Returns total number of trainable parameters."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-
 def model_size_kb(model: nn.Module) -> float:
     """Returns approximate model size in KB (float32 = 4 bytes per param)."""
     return count_parameters(model) * 4 / 1024
-
 
 # quick sanity check
 if __name__ == "__main__":

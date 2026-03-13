@@ -28,7 +28,6 @@ REPO_ROOT      = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHECKPOINT_DIR = os.path.join(REPO_ROOT, "results", "checkpoints")
 RESULTS_DIR    = os.path.join(REPO_ROOT, "results")
 
-
 def measure_inference_time(model, loader, device, n_batches=50):
     """Measures average inference time in ms per sample."""
     model.eval()
@@ -47,7 +46,6 @@ def measure_inference_time(model, loader, device, n_batches=50):
 
     return float(np.mean(times))
 
-
 @torch.no_grad()
 def get_predictions(model, loader, device):
     """Returns all predictions and true labels for a dataloader."""
@@ -63,7 +61,6 @@ def get_predictions(model, loader, device):
         all_labels.extend(y_batch.numpy())
 
     return np.array(all_preds), np.array(all_labels)
-
 
 def evaluate_model(model, model_name, size_kb, test_loader, device, int_to_symbol):
     """Full evaluation of one model. Returns metrics dict."""
@@ -101,7 +98,6 @@ def evaluate_model(model, model_name, size_kb, test_loader, device, int_to_symbo
         "model_size_kb": size_kb,
         "inference_ms":  infer_time,
     }
-
 
 def run_evaluation():
     device = torch.device("cpu")
@@ -154,7 +150,6 @@ def run_evaluation():
         )
 
     return all_metrics
-
 
 if __name__ == "__main__":
     run_evaluation()

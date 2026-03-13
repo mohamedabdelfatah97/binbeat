@@ -51,9 +51,7 @@ First and last layers remain float32 (standard practice for stability).
 **BNN wins on every metric at 4× smaller than CNN and 8× smaller than MLP.**
 
 ![Efficiency](results/figures/02_efficiency.png)
-![Accuracy & F1](results/figures/01_accuracy_f1.png)
 ![Per-class F1](results/figures/03_f1_heatmap.png)
-![Confusion Matrices](results/figures/04_confusion_matrices.png)
 
 ### Honest note on class imbalance
 

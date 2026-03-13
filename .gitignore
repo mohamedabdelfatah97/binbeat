@@ -1,9 +1,11 @@
+# replace the whole .gitignore
+cat > .gitignore << 'EOF'
 data/raw/*
 data/processed/*
 results/checkpoints/*
-results/figures/*
 __pycache__/
 *.py[cod]
 .DS_Store
 .venv
 venv/
+EOF

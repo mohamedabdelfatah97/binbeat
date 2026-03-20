@@ -1,11 +1,15 @@
 # binbeat 🫀
 
-Binary Neural Network vs full-precision benchmark for ECG arrhythmia classification.
+Benchmarking Binary Neural Networks against full-precision models for ECG arrhythmia 
+classification on the MIT-BIH dataset. Trains three models (MLP, 1D-CNN, Quantized BNN),
+evaluates them on a standard inter-patient split, and generates comparison plots for
+accuracy, F1, model size, and inference time.
 
-The idea: wearable heart monitors need to run on microcontrollers with kilobytes of RAM and no GPU.
-Full-precision models are too heavy. Binary Neural Networks quantize weights to low-bit integers,
-shrinking the model dramatically — but do they pay an accuracy cost?
-This project answers that question on real clinical data.
+**Motivation:** 
+Wearable heart monitors need to run on microcontrollers with kilobytes of 
+RAM and no GPU. Full-precision models are too heavy. Binary Neural Networks quantize weights 
+to low-bit integers, shrinking the model dramatically — but do they pay an accuracy cost?
+This project answers that on real clinical data.
 
 ---
 
